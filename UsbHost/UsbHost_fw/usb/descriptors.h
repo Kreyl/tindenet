@@ -15,6 +15,7 @@
 extern "C" {
 #endif
 
+#if 1 // ============================ Endpoints ================================
 // Endpoint Sizes for Full-Speed devices
 #define EP0_SZ              64  // Control Endpoint must have a packet size of 64 bytes
 #define EP_INTERRUPT_SZ     8   // Max size is 64 bytes
@@ -43,6 +44,15 @@ typedef struct {
     uint16_t OutMaxsize;
 } EpCfg_t;
 
+// Cfg
+#define EP_CNT                  4   // Control, Notification, In & Out
+extern const EpCfg_t EpCfg[EP_CNT];
+// Endpoint addresses. Nothing to do with inner Indx value.
+#define EP_NOTIFICATION_ADDR    1
+#define EP_BULK_OUT_ADDR        2
+#define EP_BULK_IN_ADDR         3
+#endif
+
 void GetDescriptor(uint8_t Type, uint8_t Indx, uint8_t **PPtr, uint32_t *PLen);
 
 enum USB_DescriptorTypes_t {
@@ -58,6 +68,7 @@ enum USB_DescriptorTypes_t {
     dtCSInterface               = 0x24, // class specific interface descriptor
     dtCSEndpoint                = 0x25, // class specific endpoint descriptor
 };
+
 
 #if 1 // ================= Standard descriptor types ===========================
 // Device
@@ -92,68 +103,35 @@ typedef struct {
 
 // Interface descriptor
 typedef struct {
-    uint8_t  bLength;                // Size of the descriptor, in bytes
-    uint8_t  bDescriptorType;        // Type of the descriptor, given by the specific class
-    uint8_t  bInterfaceNumber;       // Index of the interface in the current configuration
-    uint8_t  bAlternateSetting;      // Alternate setting for the interface number
-    uint8_t  bNumEndpoints;          // Total number of endpoints in the interface
-    uint8_t  bInterfaceClass;        // Interface class ID
-    uint8_t  bInterfaceSubClass;     // Interface subclass ID
-    uint8_t  bInterfaceProtocol;     // Interface protocol ID
-    uint8_t  iInterface;             // Index of the string descriptor describing the interface
+    uint8_t  bLength;               // Size of the descriptor, in bytes
+    uint8_t  bDescriptorType;       // Type of the descriptor, given by the specific class
+    uint8_t  bInterfaceNumber;      // Index of the interface in the current configuration
+    uint8_t  bAlternateSetting;     // Alternate setting for the interface number
+    uint8_t  bNumEndpoints;         // Total number of endpoints in the interface
+    uint8_t  bInterfaceClass;       // Interface class ID
+    uint8_t  bInterfaceSubClass;    // Interface subclass ID
+    uint8_t  bInterfaceProtocol;    // Interface protocol ID
+    uint8_t  iInterface;            // Index of the string descriptor describing the interface
 } __attribute__ ((__packed__)) InterfaceDescriptor_t;
 
 // Endpoint descriptor
 typedef struct {
-    uint8_t  bLength;           // Size of the descriptor, in bytes
-    uint8_t  bDescriptorType;   // Type of the descriptor, given by the specific class
-    uint8_t  bEndpointAddress;  // Logical address of the endpoint within the device for the current configuration, including direction mask
-    uint8_t  bmAttributes;      // Endpoint attributes
-    uint16_t wMaxPacketSize;    // Size of the endpoint bank, in bytes
-    uint8_t  bInterval;         // Polling interval in milliseconds for the endpoint if it is an INTERRUPT or ISOCHRONOUS type
+    uint8_t  bLength;               // Size of the descriptor, in bytes
+    uint8_t  bDescriptorType;       // Type of the descriptor, given by the specific class
+    uint8_t  bEndpointAddress;      // Logical address of the endpoint within the device for the current configuration, including direction mask
+    uint8_t  bmAttributes;          // Endpoint attributes
+    uint16_t wMaxPacketSize;        // Size of the endpoint bank, in bytes
+    uint8_t  bInterval;             // Polling interval in milliseconds for the endpoint if it is an INTERRUPT or ISOCHRONOUS type
 } __attribute__ ((__packed__)) EndpointDescriptor_t;
 
 typedef struct {
-    uint8_t  bLength;                // Size of the descriptor, in bytes
-    uint8_t  bDescriptorType;        // Type of the descriptor, given by the specific class
+    uint8_t  bLength;               // Size of the descriptor, in bytes
+    uint8_t  bDescriptorType;       // Type of the descriptor, given by the specific class
     uint16_t  bString[];
 } __attribute__ ((__packed__)) StringDescriptor_t;
 #endif
 
-#if 0 // ================= Mass Storage Device descriptors =====================
-#define USB_MASS_STORAGE    1
-
-#define EP_CNT                  3   // Control, In & Out
-// Endpoint addresses. Nothing to do with inner Indx value.
-#define EP_BULK_OUT_ADDR        1
-#define EP_BULK_IN_ADDR         2
-
-typedef struct {
-    ConfigHeader_t          ConfigHeader;       // Standard config header
-    // Mass Storage Interface
-    InterfaceDescriptor_t   MS_Interface;
-    EndpointDescriptor_t    MS_DataInEndpoint;
-    EndpointDescriptor_t    MS_DataOutEndpoint;
-} __attribute__ ((__packed__)) ConfigDescriptor_t;
-#endif
-
 #if 1 // ========================== CDC descriptors ============================
-#define USB_CDC     1
-
-#if 1 // ==== Endpoints config ====
-#define EP_CNT      4   // Control, In & Out, Interrupt
-const EpCfg_t EpCfg[EP_CNT] = {
-        {EP_TYPE_CONTROL,   EP0_SZ,          EP0_SZ},       // Control endpoint, Indx = 0
-        {EP_TYPE_INTERRUPT, EP_INTERRUPT_SZ, 0},            // Interrupt In endpoint, Indx = 1
-        {EP_TYPE_BULK,      0,               EP_BULK_SZ},   // Bulk Out endpoint, Indx = 2
-        {EP_TYPE_BULK,      EP_BULK_SZ,      0},            // Bulk In endpoint, Indx = 3
-};
-#define EP_INTERRUPT_INDX   1
-#define EP_BULK_OUT_INDX    2
-#define EP_BULK_IN_INDX     3
-#endif
-
-
 typedef struct {
     uint8_t  bFunctionLength;   // Size of the descriptor, in bytes
     uint8_t  bDescriptorType;   // Type of the descriptor, either a value in USB_DescriptorTypes_t or a value given by the specific class.
@@ -169,6 +147,7 @@ typedef struct {
     uint8_t bmCapabilities;     // Capabilities of the ACM interface, given as a bit mask. For most devices, this should be set to a fixed value of 0x06 - for other capabilities, refer to the CDC ACM specification.
     uint8_t bDataInterface;
 } __attribute__ ((__packed__)) CDCFuncCallMgmt_t;
+
 
 typedef struct {
     uint8_t bFunctionLength;    // Size of the descriptor, in bytes.
@@ -200,6 +179,7 @@ typedef struct {
     EndpointDescriptor_t    DataInEndpoint;
 } __attribute__ ((__packed__)) ConfigDescriptor_t;
 #endif
+
 
 #ifdef __cplusplus
 }
