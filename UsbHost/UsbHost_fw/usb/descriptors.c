@@ -91,7 +91,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bNumEndpoints:      1,
             bInterfaceClass:    0x02, // Descriptor Class value indicating that the device or interface belongs to the CDC class
             bInterfaceSubClass: 0x02, // Descriptor Subclass value indicating that the device or interface belongs to the Abstract Control Model CDC subclass
-            bInterfaceProtocol: 0x02, // Descriptor Protocol value indicating that the device or interface belongs to the AT Command protocol of the CDC class
+            bInterfaceProtocol: 0x01, // Descriptor Protocol value indicating that the device or interface belongs to the AT Command protocol of the CDC class
             iInterface:         0     // No string
         },
 
@@ -101,6 +101,15 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bDescriptorSubType: 0x00, // CDC class-specific Header functional descriptor
             bcdCDC:             0x0110
         },
+
+        FuncCallMgmt: {
+            bFunctionLength:    sizeof(CDCFuncCallMgmt_t),
+            bDescriptorType:    dtCSInterface,
+            bDescriptorSubType: 0x01,
+            bmCapabilities:     0x00,   // D0+D1
+            bDataInterface:     0x01
+        },
+
 
         FuncAcm: {
             bFunctionLength:    sizeof(CDCFuncACM_t),
