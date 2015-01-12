@@ -191,7 +191,7 @@ static const StringDescriptor_t ProductString = {
 };
 
 static const StringDescriptor_t DeviceSerial = {
-        bLength: USB_STRING_LEN(5),
+        bLength: USB_STRING_LEN(3),
         bDescriptorType: dtString,
         bString: {'1','2','3'}
 };
