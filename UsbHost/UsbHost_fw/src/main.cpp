@@ -65,6 +65,7 @@ void Init() {
     // ==== Init Hard & Soft ====
     Uart.Init(115200);
 //    Led.Init();
+
     App.Init();
     App.PThd = chThdSelf();
 //    Radio.Init();
