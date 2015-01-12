@@ -252,8 +252,8 @@ void Ep_t::ReceiveZeroPkt() {
 
 #if 1 // =========================== High level ================================
 void Usb_t::SetupPktHandler() {
-    //Uart.Printf("Setup\r");
-//    Uart.Printf("%A\r", (uint8_t*)&SetupReq, 8, ' ');
+    Uart.Printf("Setup\r");
+    Uart.Printf("%A\r", (uint8_t*)&SetupReq, 8, ' ');
     // Try to handle request
     uint8_t *FPtr;
     uint32_t FLength;
@@ -287,7 +287,7 @@ void Usb_t::SetupPktHandler() {
 // Ep0 callbacks
 static void SetAddress() {
     uint32_t Addr = Usb.SetupReq.wValue;
-//    Uart.Printf("SetAddr %u\r", Addr);
+    Uart.Printf("SetAddr %u\r", Addr);
     STM32_USB->DADDR = Addr | DADDR_EF;
 }
 
@@ -310,11 +310,11 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
                 return esOutStatus;
                 break;
             case USB_REQ_GET_DESCRIPTOR:
-//                Uart.Printf("GetDesc t=%u i=%u\r", SetupReq.Type, SetupReq.Indx);
+                Uart.Printf("GetDesc t=%u i=%u\r", SetupReq.Type, SetupReq.Indx);
                 GetDescriptor(SetupReq.Type, SetupReq.Indx, PPtr, PLen);
                 // Trim descriptor if needed, as host can request part of descriptor.
                 TRIM_VALUE(*PLen, SetupReq.wLength);
-//                Uart.Printf("DescLen=%u\r", PBuf->Len);
+                Uart.Printf("DescLen=%u\r", *PLen);
                 if(*PLen != 0) return esInData;
                 break;
             case USB_REQ_GET_CONFIGURATION:
@@ -339,14 +339,18 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
             default: break;
         } // switch
     }
-//    else if(Recipient == USB_RTYPE_RECIPIENT_INTERFACE) {
-//        if(SetupReq.bRequest == USB_REQ_GET_STATUS) {
-//            Uart.Printf("InterfGetSta\r");
-//            *Ptr = (uint8_t*)ZeroStatus;
-//            *PLen = 2;
-//            return OK;
-//        }
-//    }
+    else if(Recipient == USB_REQTYPE_RECIPIENT_INTERFACE) {
+        if(SetupReq.bRequest == USB_REQ_SET_INTERFACE) {
+            if(SetupReq.wIndex > 1 or SetupReq.wValue != 0) return esError;
+            return esOutStatus;
+        }
+        else if(SetupReq.bRequest == USB_REQ_GET_INTERFACE) {
+            if(SetupReq.wIndex > 1) return esError;
+            *PPtr = (uint8_t*)cZero;
+            *PLen = 1;
+            return esInData;
+        }
+    }
     else if(Recipient == USB_REQTYPE_RECIPIENT_ENDPOINT) {
 //        EP0_PRINT("Ep\r");
         switch(SetupReq.bRequest) {
@@ -398,22 +402,22 @@ void Usb_t::IIrqHandler() {
     uint32_t istr = STM32_USB->ISTR;
 //    Uart.Printf("i=%X\r", istr);
     if(istr & ISTR_RESET) {
-//        Uart.Printf("Rst\r");
+        Uart.Printf("Rst\r");
         IReset();
         STM32_USB->ISTR = ~ISTR_RESET;
     }
     if(istr & ISTR_SUSP) {
-//        Uart.Printf("Sup\r");
+        Uart.Printf("Sup\r");
         ISuspend();
         STM32_USB->ISTR = ~ISTR_SUSP;
     }
     if(istr & ISTR_WKUP) {
-//        Uart.Printf("Wup\r");
+        Uart.Printf("Wup\r");
         IWakeup();
         STM32_USB->ISTR = ~ISTR_WKUP;
     }
     while(istr & ISTR_CTR) {
-//        Uart.Printf("Ctr\r");
+        Uart.Printf("Ctr\r");
         uint16_t EpID = istr & ISTR_EP_ID_MASK;
         uint16_t epr = STM32_USB->EPR[EpID];
         if(epr & EPR_CTR_TX) ICtrHandlerIN(EpID);

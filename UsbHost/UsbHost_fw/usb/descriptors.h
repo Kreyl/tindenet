@@ -189,10 +189,10 @@ typedef struct {
     ConfigHeader_t          ConfigHeader;       // Standard config header
     // CDC Control Interface
     InterfaceDescriptor_t   CCI_Interface;      // Standard interface descriptor
-    CDCFuncHeader_t         FuncHeader;         // Header functional
+    CDCFuncHeader_t         FuncHeader;
     CDCFuncCallMgmt_t       FuncCallMgmt;       // Call management functional
-    CDCFuncACM_t            FuncAcm;            // Abstract Control Model Functional
-    CDCFuncUnion_t          FuncUnion;          // Union Functional
+    CDCFuncACM_t            FuncAcm;
+    CDCFuncUnion_t          FuncUnion;
     EndpointDescriptor_t    NotificationEndpoint;
     // CDC Data Interface
     InterfaceDescriptor_t   DCI_Interface;      // Standard interface descriptor

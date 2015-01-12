@@ -27,9 +27,9 @@ static const DeviceDescriptor_t DeviceDescriptor = {
         bDeviceSubClass:    0x00,            // No SubClass
         bDeviceProtocol:    0x00,            // No Protocol
         bMaxPacketSize0:    EP0_SZ,          // bMaxPacketSize0
-        idVendor:           0x0483,          // idVendor (ST)
-        idProduct:          0x5740,          // idProduct
-        bcdDevice:          0x0002,          // bcdDevice
+        idVendor:           0x0483,          // idVendor = 0x0483
+        idProduct:          0x5740,          // idProduct = 0x5740
+        bcdDevice:          2,               // bcdDevice
         iManufacturer:      1,               // iManufacturer
         iProduct:           2,               // iProduct
         iSerialNumber:      3,               // iSerialNumber: A serial number prevents unwanted COM-port proliferation. A device with a serial number retains its COM-port number if moved to a different USB port on a Windows PC
@@ -252,7 +252,11 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bEndpointAddress:   (EP_DIR_IN | EP_BULK_IN_ADDR),
             bmAttributes:       (EP_TYPE_BULK | EP_ATTR_NO_SYNC | EP_USAGE_DATA),
             wMaxPacketSize:     EP_BULK_SZ,
+<<<<<<< HEAD
             bInterval:          0
+=======
+            bInterval:          0x00
+>>>>>>> old_descryptors
         }
 };
 #endif
@@ -267,23 +271,39 @@ static const StringDescriptor_t LanguageString = {
 
 // Vendor string
 static const StringDescriptor_t ManufacturerString = {
+<<<<<<< HEAD
         bLength: USB_STRING_LEN(6),
         bDescriptorType: dtString,
         bString: {'W', 'W', 'P', 'a', 's', 's'}
+=======
+        bLength: USB_STRING_LEN(8),
+        bDescriptorType: dtString,
+        bString: {'O','s','t','r','a','n','n','a'}
+>>>>>>> old_descryptors
 };
 
 // Device Description string
 static const StringDescriptor_t ProductString = {
+<<<<<<< HEAD
         bLength: USB_STRING_LEN(12),
         bDescriptorType: dtString,
         bString: {'M','a','s','s',' ','S','t','o','r','a','g','e'}
+=======
+        bLength: USB_STRING_LEN(11),
+        bDescriptorType: dtString,
+        bString: {'V','i','r','t','u','a','l',' ','C','O','M'}
+>>>>>>> old_descryptors
 };
 
 // Serial string
 static const StringDescriptor_t SerialNumber = {
         bLength: USB_STRING_LEN(12),
         bDescriptorType: dtString,
+<<<<<<< HEAD
         bString: {'0','1','2','3','4','5','6','7','8','9','A','B'}
+=======
+        bString: {'1','2','3'}
+>>>>>>> old_descryptors
 };
 #endif
 
