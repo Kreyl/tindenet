@@ -61,7 +61,7 @@ static const DeviceDescriptor_t DeviceDescriptor = {
         bDeviceProtocol:    0x00,            // bDeviceProtocol
         bMaxPacketSize0:    EP0_SZ,          // bMaxPacketSize0
         idVendor:           0x0483,          // idVendor = 0x0483
-        idProduct:          0x7540,          // idProduct = 0x7540
+        idProduct:          0x5740,          // idProduct = 0x5740
         bcdDevice:          2,               // bcdDevice
         iManufacturer:      1,               // iManufacturer
         iProduct:           2,               // iProduct
@@ -78,7 +78,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bNumInterfaces:     2,
             bConfigurationValue:1,
             iConfiguration:     0,
-            bmAttributes:       0xC0,   // USB_CONFIG_ATTR_RESERVED
+            bmAttributes:       0x80,   // USB_CONFIG_ATTR_RESERVED
             bMaxPower:          USB_CONFIG_POWER_MA(100)
         },
 
@@ -91,7 +91,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bNumEndpoints:      1,
             bInterfaceClass:    0x02, // Descriptor Class value indicating that the device or interface belongs to the CDC class
             bInterfaceSubClass: 0x02, // Descriptor Subclass value indicating that the device or interface belongs to the Abstract Control Model CDC subclass
-            bInterfaceProtocol: 0x01, // Descriptor Protocol value indicating that the device or interface belongs to the AT Command protocol of the CDC class
+            bInterfaceProtocol: 0x02, // Descriptor Protocol value indicating that the device or interface belongs to the AT Command protocol of the CDC class
             iInterface:         0     // No string
         },
 
@@ -106,7 +106,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bFunctionLength:    sizeof(CDCFuncACM_t),
             bDescriptorType:    dtCSInterface,
             bDescriptorSubType: 0x02, // CDC class-specific Abstract Control Model functional descriptor
-            bmCapabilities:     0x06
+            bmCapabilities:     0x02
         },
 
         FuncUnion: {
@@ -145,7 +145,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bEndpointAddress:   (EP_DIR_OUT | EP_BULK_OUT_ADDR),
             bmAttributes:       (EP_TYPE_BULK | EP_ATTR_NO_SYNC | EP_USAGE_DATA),
             wMaxPacketSize:     EP_BULK_SZ,
-            bInterval:          0x05
+            bInterval:          0x00
         },
 
         DataInEndpoint: {
@@ -154,7 +154,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bEndpointAddress:   (EP_DIR_IN | EP_BULK_IN_ADDR),
             bmAttributes:       (EP_TYPE_BULK | EP_ATTR_NO_SYNC | EP_USAGE_DATA),
             wMaxPacketSize:     EP_BULK_SZ,
-            bInterval:          0x05
+            bInterval:          0x00
         }
 };
 #endif
@@ -169,22 +169,22 @@ static const StringDescriptor_t LanguageString = {
 
 // Vendor string
 static const StringDescriptor_t ManufacturerString = {
-        bLength: USB_STRING_LEN(18),
+        bLength: USB_STRING_LEN(8),
         bDescriptorType: dtString,
-        bString: {'S','T','M','i','c','r','o','e','l','e','c','t','r','o','n','i','c','s'}
+        bString: {'O','s','t','r','a','n','n','a'}
 };
 
 // Device Description string
 static const StringDescriptor_t ProductString = {
-        bLength: USB_STRING_LEN(22),
+        bLength: USB_STRING_LEN(11),
         bDescriptorType: dtString,
-        bString: {'S','T','M','3','2',' ','V','i','r','t','u','a','l',' ','C','O','M',' ','P','o','r','t'}
+        bString: {'V','i','r','t','u','a','l',' ','C','O','M'}
 };
 
 static const StringDescriptor_t DeviceSerial = {
         bLength: USB_STRING_LEN(5),
         bDescriptorType: dtString,
-        bString: {'S','T','M','3','2'}
+        bString: {'1','2','3'}
 };
 #endif
 

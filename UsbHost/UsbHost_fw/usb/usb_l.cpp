@@ -396,24 +396,24 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
 // ================================ IRQ ========================================
 void Usb_t::IIrqHandler() {
     uint32_t istr = STM32_USB->ISTR;
-//    Uart.Printf("i=%X\r", istr);
+    Uart.Printf("i=%X\r", istr);
     if(istr & ISTR_RESET) {
-//        Uart.Printf("Rst\r");
+        Uart.Printf("Rst\r");
         IReset();
         STM32_USB->ISTR = ~ISTR_RESET;
     }
     if(istr & ISTR_SUSP) {
-//        Uart.Printf("Sup\r");
+        Uart.Printf("Sup\r");
         ISuspend();
         STM32_USB->ISTR = ~ISTR_SUSP;
     }
     if(istr & ISTR_WKUP) {
-//        Uart.Printf("Wup\r");
+        Uart.Printf("Wup\r");
         IWakeup();
         STM32_USB->ISTR = ~ISTR_WKUP;
     }
     while(istr & ISTR_CTR) {
-//        Uart.Printf("Ctr\r");
+        Uart.Printf("Ctr\r");
         uint16_t EpID = istr & ISTR_EP_ID_MASK;
         uint16_t epr = STM32_USB->EPR[EpID];
         if(epr & EPR_CTR_TX) ICtrHandlerIN(EpID);
