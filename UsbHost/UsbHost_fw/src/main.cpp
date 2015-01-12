@@ -14,6 +14,7 @@
 #include "application.h"
 #include "radio_lvl1.h"
 #include "evt_mask.h"
+#include "usb_l.h"
 
 
 inline void Init();
@@ -30,11 +31,13 @@ int main(void) {
     SetupVCore(vcore1V8);
     Clk.SetupFlashLatency(24);
     uint8_t ClkResult = 1;
-    // 12 MHz * 8 = ; 12*8 = 96 MHz; 96 / 4 = 24 Mhz;
+    // 12 MHz * 8 = ; 12*8 = 96 MHz; 96 / 4 = 24 Mhz; Clocking to USB PLLVCO/2 = ((HSE*PLLMUL)/2) = 48 Mhz
     Clk.SetupPLLMulDiv(pllMul8, pllDiv4);
-    // 48/4 = 12 MHz core clock. APB1 & APB2 clock derive on AHB clock
     Clk.SetupBusDividers(ahbDiv1, apbDiv1, apbDiv1);
-    if((ClkResult = Clk.SwitchToPLL()) == 0)  //Clk.DisableHSI();
+    if((ClkResult = Clk.SwitchToPLL()) == 0) {
+        Clk.DisableHSI();
+        Clk.DisableMSI();
+    }
     Clk.UpdateFreqValues();
 
     // ==== Init OS ====
@@ -66,5 +69,8 @@ void Init() {
     App.PThd = chThdSelf();
 //    Radio.Init();
 
-    Uart.Printf("\r\nTindenet \r\nAHB=%u; APB1=%u; APB2=%u;", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+    Uart.Printf("\r\nTindenet \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+
+    Usb.Init();
+    Usb.Connect();
 }
