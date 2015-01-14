@@ -181,19 +181,24 @@ static const StringDescriptor_t ManufacturerString = {
         bLength: USB_STRING_LEN(8),
         bDescriptorType: dtString,
         bString: {'O','s','t','r','a','n','n','a'}
+//        bString: {'S','T','M','i','c','r','o','e','l','e','c','t','r','o','n','i','c','s'}
 };
 
 // Device Description string
 static const StringDescriptor_t ProductString = {
-        bLength: USB_STRING_LEN(11),
+        bLength: USB_STRING_LEN(25),
         bDescriptorType: dtString,
-        bString: {'V','i','r','t','u','a','l',' ','C','O','M'}
+        bString: {'O','s','t','r','a','n','n','a',' ','V',
+                  'i','r','t','u','a','l',' ','C','O','M',
+                  ' ','P', 'o','r','t'}
+//        bString: {'S','T','M','3','2',' ','V','i','r','t','u','a','l',' ','C','O','M',' ','P','o','r','t',' ',' ' }
 };
 
 static const StringDescriptor_t DeviceSerial = {
         bLength: USB_STRING_LEN(3),
         bDescriptorType: dtString,
         bString: {'1','2','3'}
+//        bString: {'S','T','M','3','2',' '}
 };
 #endif
 
