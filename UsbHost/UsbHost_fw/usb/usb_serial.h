@@ -8,10 +8,14 @@
 #ifndef USB_SERIAL_H_
 #define USB_SERIAL_H_
 
+#include "cmd_uart.h"
 #include "usb_l.h"
+#include "cmd_list.h"
 
 #define CDC_OUTQ_SZ     256
 #define CDC_INQ_SZ      256
+
+#define END_OF_COMMAND  "\n\r"
 
 class UsbSerial_t {
 private:
@@ -19,6 +23,8 @@ private:
     InputQueue UsbOutQueue; // From chibios' point of view, OUT data is input
     OutputQueue UsbInQueue; // From chibios' point of view, IN data is output
 public:
+    Thread *PThread;
+    uint8_t BytesToRead;
     void Init();
     void SendBuf(uint8_t *PBuf, uint32_t Len) {
         chOQWriteTimeout(&UsbInQueue, PBuf, Len, TIME_INFINITE);
@@ -32,10 +38,15 @@ public:
         }
         else return FAILURE;
     }
+    void Printf(const char *format, ...);
     // Inner use
     void IOutTask();
+    Cmd_t ICmd[2], *PCmdWrite = &ICmd[0], *PCmdRead = &ICmd[1];
+    void CompleteCmd();
+    void ParseCmd(Cmd_t *PCmd);
+    void CmdRpl(uint8_t ErrCode, uint32_t Length = 0, ...);
 };
 
-extern UsbSerial_t UUart;
+extern UsbSerial_t UsbSerial;
 
 #endif /* USB_SERIAL_H_ */

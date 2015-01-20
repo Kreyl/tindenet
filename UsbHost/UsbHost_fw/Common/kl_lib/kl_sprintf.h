@@ -3,9 +3,9 @@
 
 #include <stdarg.h>
 #include <stdint.h>
-
+#include "ch.h" // for queues
 /*
-Supported format specifiers:
+ Supported format specifiers:
 %s - string
 %c - char
 %d - int
@@ -22,6 +22,7 @@ typedef void(*ftVoidChar)(char);
 extern "C" {
 #endif
 uint32_t kl_vsprintf(ftVoidChar PPutChar, uint32_t MaxLength, const char *format, va_list args);
+void kl_print2Queue(OutputQueue *PQ, const char *format, va_list args);
 #ifdef __cplusplus
 }
 #endif

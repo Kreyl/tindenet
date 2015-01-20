@@ -32,16 +32,80 @@ struct Linecoding_t {
 #define LC_PARITY_SPACE                 4
 
 // ==== Variables ====
-UsbSerial_t UUart;
+UsbSerial_t UsbSerial;
 
 static Linecoding_t LineCoding = {
   {0x00, 0x96, 0x00, 0x00},             // 38400
   LC_STOP_1, LC_PARITY_NONE, 8
 };
 
+# if 1 // =============== Thread ==================
+static WORKING_AREA(waUsbSerialThread, 128);
+__attribute__ ((__noreturn__))
+static void UsbSerialThread(void *arg) {
+    chRegSetThreadName("Vcp");
+    while(1) {
+        chSysLock();
+        chSchGoSleepS(THD_STATE_SUSPENDED);
+        chSysUnlock();
+        UsbSerial.IOutTask();
+    }
+}
+
+void UsbSerial_t::IOutTask() {
+    uint8_t Byte = 0;
+    do {
+        GetByte(&Byte);
+        if(Byte == '\b') PCmdWrite->Backspace();
+        else if((Byte == '\r') or (Byte == '\n')) CompleteCmd();
+        else PCmdWrite->PutChar(Byte);
+    } while(--BytesToRead != 0);
+}
+
+void UsbSerial_t::CompleteCmd() {
+    if(PCmdWrite->IsEmpty()) return;
+    chSysLock();
+    PCmdWrite->Finalize();
+    PCmdRead = PCmdWrite;
+    PCmdWrite = (PCmdWrite == &ICmd[0])? &ICmd[1] : &ICmd[0];
+    PCmdWrite->Cnt = 0;
+    chSysUnlock();
+    ParseCmd(PCmdRead);
+}
+
+void UsbSerial_t::CmdRpl(uint8_t ErrCode, uint32_t Length, ...) {
+    uint32_t Buf[Length];
+    if(Length != 0) {
+        va_list Arg;
+        va_start(Arg, Length);
+        for (uint32_t i=0; i<Length; i++) Buf[i] = (uint32_t)va_arg(Arg, int);
+        va_end(Arg);
+    }
+    if(ErrCode == 0) Printf("#Ack %X %A" END_OF_COMMAND, ErrCode, Buf, Length, ' ');
+    else Printf("#Err %X" END_OF_COMMAND, ErrCode);
+}
+
+void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
+//    Uart.Printf("\r\n%S", PCmd->IString);
+    if(PCmd->NameIs(USB_SERIAL_PING)) CmdRpl(OK);
+    else if(PCmd->NameIs(USB_SERIAL_CMD)) {
+        uint32_t CmdID = 0;
+        if(PCmd->TryConvertTokenToNumber(&CmdID) == OK) {
+            Uart.Printf("\r\nCmdID: %u", CmdID);
+            // Here we have cmd ID
+            // cmd event eith ID and data and others and etc.
+
+            CmdRpl(OK);
+        } else CmdRpl(CMD_ERROR);
+    }
+    else if(*PCmd->Name == '#') CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
+}
+
+#endif
+
 #if 1 // ======================== USB events ===================================
 static void OnUsbReady() {
-    Uart.Printf("Ready\r");
+    Uart.Printf("\r\nReady");
     Usb.PEpBulkOut->StartOutTransaction();
 }
 
@@ -99,4 +163,15 @@ void UsbSerial_t::Init() {
     chOQInit(&UsbInQueue, InQBuf, CDC_INQ_SZ, NULL, NULL);
     // Start reception
     Usb.PEpBulkOut->StartOutTransaction();
+    PThread = chThdCreateStatic(waUsbSerialThread, sizeof(waUsbSerialThread), NORMALPRIO, (tfunc_t)UsbSerialThread, NULL);
 }
+
+void UsbSerial_t::Printf(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    kl_print2Queue(&UsbInQueue, format, args);
+    va_end(args);
+    // Start transmission
+    Usb.PEpBulkIn->WriteFromQueue(&UsbInQueue);
+}
+

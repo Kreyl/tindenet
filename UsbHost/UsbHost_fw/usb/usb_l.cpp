@@ -8,6 +8,7 @@
 #include "usb_l.h"
 #include "kl_lib_L15x.h"
 #include "cmd_uart.h"
+#include "usb_serial.h"
 
 // USB BufTable registers block
 struct BTableReg_t {
@@ -252,8 +253,8 @@ void Ep_t::ReceiveZeroPkt() {
 
 #if 1 // =========================== High level ================================
 void Usb_t::SetupPktHandler() {
-    Uart.Printf("Setup\r");
-    Uart.Printf("%A\r", (uint8_t*)&SetupReq, 8, ' ');
+//    Uart.Printf("Setup\r");
+//    Uart.Printf("%A\r", (uint8_t*)&SetupReq, 8, ' ');
     // Try to handle request
     uint8_t *FPtr;
     uint32_t FLength;
@@ -287,7 +288,7 @@ void Usb_t::SetupPktHandler() {
 // Ep0 callbacks
 static void SetAddress() {
     uint32_t Addr = Usb.SetupReq.wValue;
-    Uart.Printf("SetAddr %u\r", Addr);
+//    Uart.Printf("SetAddr %u\r", Addr);
     STM32_USB->DADDR = Addr | DADDR_EF;
 }
 
@@ -298,7 +299,7 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
         //Uart.Printf("Dev\r\n");
         switch(SetupReq.bRequest) {
             case USB_REQ_GET_STATUS:    // Just return the current status word
-                Uart.Printf("GetStatus\r");
+//                Uart.Printf("GetStatus\r");
                 *PPtr = (uint8_t*)cZero;    // Remote wakeup = 0, selfpowered = 0
                 *PLen = 2;
                 return esInData;
@@ -310,11 +311,11 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
                 return esOutStatus;
                 break;
             case USB_REQ_GET_DESCRIPTOR:
-                Uart.Printf("GetDesc t=%u i=%u\r", SetupReq.Type, SetupReq.Indx);
+//                Uart.Printf("GetDesc t=%u i=%u\r", SetupReq.Type, SetupReq.Indx);
                 GetDescriptor(SetupReq.Type, SetupReq.Indx, PPtr, PLen);
                 // Trim descriptor if needed, as host can request part of descriptor.
                 TRIM_VALUE(*PLen, SetupReq.wLength);
-                Uart.Printf("DescLen=%u\r", *PLen);
+//                Uart.Printf("DescLen=%u\r", *PLen);
                 if(*PLen != 0) return esInData;
                 break;
             case USB_REQ_GET_CONFIGURATION:
@@ -402,22 +403,22 @@ void Usb_t::IIrqHandler() {
     uint32_t istr = STM32_USB->ISTR;
 //    Uart.Printf("i=%X\r", istr);
     if(istr & ISTR_RESET) {
-        Uart.Printf("Rst\r");
+//        Uart.Printf("Rst\r");
         IReset();
         STM32_USB->ISTR = ~ISTR_RESET;
     }
     if(istr & ISTR_SUSP) {
-        Uart.Printf("Sup\r");
+//        Uart.Printf("Sup\r");
         ISuspend();
         STM32_USB->ISTR = ~ISTR_SUSP;
     }
     if(istr & ISTR_WKUP) {
-        Uart.Printf("Wup\r");
+//        Uart.Printf("Wup\r");
         IWakeup();
         STM32_USB->ISTR = ~ISTR_WKUP;
     }
     while(istr & ISTR_CTR) {
-        Uart.Printf("Ctr\r");
+//        Uart.Printf("Ctr\r");
         uint16_t EpID = istr & ISTR_EP_ID_MASK;
         uint16_t epr = STM32_USB->EPR[EpID];
         if(epr & EPR_CTR_TX) ICtrHandlerIN(EpID);
@@ -510,6 +511,13 @@ void Usb_t::ICtrHandlerOUT(uint16_t EpID, uint16_t Epr) {
         if(ep->POutQueue != nullptr) ep->ReadToQueue(Len);
         else ep->FlushRx(Len);
         ep->StartOutTransaction();
+        // Ping UsbSerial Thread to get bytes
+        if(UsbSerial.PThread != nullptr) {
+            UsbSerial.BytesToRead = Len;
+            chSysLockFromIsr();
+            chSchReadyI(UsbSerial.PThread);
+            chSysUnlockFromIsr();
+        }
     }
 }
 

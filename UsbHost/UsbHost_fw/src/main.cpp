@@ -14,8 +14,9 @@
 #include "application.h"
 #include "radio_lvl1.h"
 #include "evt_mask.h"
-#include "usb_l.h"
 #include "usb_serial.h"
+#include "usb_l.h"
+
 
 
 inline void Init();
@@ -59,9 +60,6 @@ int main(void) {
         // ==== Uart cmd ====
         if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
 
-//        uint8_t b=0;
-//        UUart.GetByte(&b);
-//        UUart.SendBuf(&b, 1);
     } // while true
 
 }
@@ -79,5 +77,6 @@ void Init() {
 
     Usb.Init();
     Usb.Connect();
-//    UUart.Init();
+    UsbSerial.Init();
 }
+

@@ -14,6 +14,7 @@
 #include "kl_lib_L15x.h"
 #include "descriptors.h"
 
+
 #if 1 // ============================ Endpoint =================================
 enum EpState_t {esIdle, esSetup, esInData, esOutData, esInStatus, esOutStatus, esError};
 
@@ -109,6 +110,7 @@ public:
     // Inner use
     void IIrqHandler();
     friend class Ep_t;
+    friend class UsbSerial_t;
 };
 
 extern Usb_t Usb;

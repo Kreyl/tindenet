@@ -75,6 +75,7 @@ public:
     uint8_t TryConvertTokenToNumber( int32_t *POutput) { return Convert::TryStrToInt32(Token, POutput); }
     bool NameIs(const char *SCmd) { return (strcasecmp(Name, SCmd) == 0); }
     friend class CmdUart_t;
+    friend class UsbSerial_t;
 };
 
 class CmdUart_t {

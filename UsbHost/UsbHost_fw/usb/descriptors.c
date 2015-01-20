@@ -78,7 +78,7 @@ static const ConfigDescriptor_t ConfigDescriptor = {
             bNumInterfaces:     2,
             bConfigurationValue:1,
             iConfiguration:     0,
-            bmAttributes:       0x80,   // USB_CONFIG_ATTR_RESERVED
+            bmAttributes:       0xC0,   // USB_CONFIG_ATTR_RESERVED
             bMaxPower:          USB_CONFIG_POWER_MA(100)
         },
 
