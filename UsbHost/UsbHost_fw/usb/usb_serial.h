@@ -11,6 +11,8 @@
 #include "cmd_uart.h"
 #include "usb_l.h"
 #include "cmd_list.h"
+#include "evt_mask.h"
+#include "application.h"
 
 #define CDC_OUTQ_SZ     256
 #define CDC_INQ_SZ      256

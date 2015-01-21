@@ -88,17 +88,36 @@ void UsbSerial_t::CmdRpl(uint8_t ErrCode, uint32_t Length, ...) {
 void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
 //    Uart.Printf("\r\n%S", PCmd->IString);
     if(PCmd->NameIs(USB_SERIAL_PING)) CmdRpl(OK);
-    else if(PCmd->NameIs(USB_SERIAL_CMD)) {
-        uint32_t CmdID = 0;
-        if(PCmd->TryConvertTokenToNumber(&CmdID) == OK) {
-            Uart.Printf("\r\nCmdID: %u", CmdID);
-            // Here we have cmd ID
-            // cmd event eith ID and data and others and etc.
 
-            CmdRpl(OK);
-        } else CmdRpl(CMD_ERROR);
+    else if(PCmd->NameIs(USB_SERIAL_CMD)) {
+        uint32_t CmdLength = 0;
+        uint8_t  rVal = FAILURE;
+        rVal = PCmd->TryConvertTokenToNumber(&CmdLength);
+        if (rVal == OK) {
+            Uart.Printf("\r\nCmdLength: %u", CmdLength); // Here we have cmd ID
+            // cmd event eith ID and data and others and etc.
+            // fabrique of command to get the command buffer from command string
+            for(uint8_t i=0; i < CmdLength; i++) {
+                rVal = PCmd->GetNextToken();
+                if(rVal != OK) break; // error cmd parameters
+                // here the correct value need to be concvert ot number
+                uint32_t Value = 0;
+                rVal = PCmd->TryConvertTokenToNumber(&Value);
+                if(rVal != OK) break;
+                Uart.Printf("\r\n%u: %u", i, Value);
+                App.HostCommand.PutValue((uint8_t*)&Value);
+            } // parse command
+            if(rVal == OK) { // send event to AppThd
+                Uart.Printf("\r\nCmd OK");
+                chSysLockFromIsr();
+                chEvtSignalI(App.PThd, EVTMSK_NEW_CMD);
+                chSysUnlockFromIsr();
+            }
+        } // correct Length
+        CmdRpl(OK);
     }
-    else if(*PCmd->Name == '#') CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
+
+    else if(*PCmd->Name != '#') CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
 }
 
 #endif
@@ -162,7 +181,7 @@ void UsbSerial_t::Init() {
     Usb.PEpBulkOut->POutQueue = &UsbOutQueue;
     chOQInit(&UsbInQueue, InQBuf, CDC_INQ_SZ, NULL, NULL);
     // Start reception
-    Usb.PEpBulkOut->StartOutTransaction();
+//    Usb.PEpBulkOut->StartOutTransaction();
     PThread = chThdCreateStatic(waUsbSerialThread, sizeof(waUsbSerialThread), NORMALPRIO, (tfunc_t)UsbSerialThread, NULL);
 }
 

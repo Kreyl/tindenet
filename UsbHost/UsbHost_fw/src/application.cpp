@@ -19,43 +19,6 @@
 App_t App;
 extern void TmrMeasurementCallback(void *p) __attribute__((unused));
 
-#if 1 // ================================ Pill =================================
-void App_t::OnPillConnect() {
-    if(PillMgr.Read(PILL_I2C_ADDR, PILL_START_ADDR, &Pill, sizeof(Pill_t)) != OK) return;
-    // Print pill
-    Uart.Printf("#PillRead32 0 16\r\n");
-    Uart.Printf("#PillData32 ");
-    int32_t *p = (int32_t*)&Pill;
-    for(uint32_t i=0; i<PILL_SZ32; i++) Uart.Printf("%d ", *p++);
-    Uart.Printf("\r\n");
-    uint8_t rslt __attribute__((unused));
-    switch(Pill.TypeID) {
-#if 1 // ==== Set ID ====
-        case PILL_TYPEID_SET_ID:
-            Pill.DeviceID++;
-            rslt = PillMgr.Write(PILL_I2C_ADDR, 0, &Pill, PILL_SZ);
-            if(rslt == OK) {
-                ISetID(Pill.DeviceID-1);
-                Led.StartSequence(LedGoodID);
-                Beeper.Beep(BeepPillOk);
-            }
-            else {
-                Uart.Printf("Pill Write Error\r");
-                Led.StartSequence(LedBadID);
-                Beeper.Beep(BeepPillBad);
-            }
-            chThdSleepMilliseconds(1800);
-            break;
-#endif
-
-        default:
-            Uart.Printf("Unknown Pill\r");
-            Beeper.Beep(BeepPillBad);
-            break;
-    } // switch
-}
-#endif
-
 #if 1 // ======================= Command processing ============================
 void App_t::OnUartCmd(Cmd_t *PCmd) {
     Uart.Printf("%S\r", PCmd->Name);
@@ -69,10 +32,8 @@ void App_t::OnUartCmd(Cmd_t *PCmd) {
 
 #if 1 // ========================= Application =================================
 void App_t::Init() {
+    HostCommand.Init();
     SelfID = EE.Read32(EE_DEVICE_ID_ADDR);  // Read device ID
-#ifdef MIST_SUPPORT_CHIBI
-    mist_msec_ctr=-1;
-#endif
 }
 
 uint8_t App_t::ISetID(uint32_t NewID) {

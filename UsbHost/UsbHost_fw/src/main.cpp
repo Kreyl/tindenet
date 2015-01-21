@@ -60,6 +60,9 @@ int main(void) {
         // ==== Uart cmd ====
         if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
 
+        if(EvtMsk & EVTMSK_NEW_CMD) {
+            Uart.Printf("\r\nNewCommand recieved: %A", App.HostCommand.PBufCmd, App.HostCommand.CmdLength, ' ');
+        }
     } // while true
 
 }
