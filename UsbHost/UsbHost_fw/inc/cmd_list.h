@@ -9,8 +9,9 @@
 #define INC_CMD_LIST_H_
 
 
-#define USB_SERIAL_PING     "#ping"
-#define USB_SERIAL_CMD      "#cmd"
+#define USB_SERIAL_PING         "#ping"
+#define USB_SERIAL_CMD          "#cmd"
+#define USB_SERIAL_INIT_RADIO   "#initradio"
 
 
 #endif /* INC_CMD_LIST_H_ */

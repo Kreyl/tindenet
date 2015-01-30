@@ -11,17 +11,16 @@
 #include "kl_lib_L15x.h"
 #include "cmd_uart.h"
 
-#define LED_INTENCITY_TOP       1998
-#define LED_GLEAM_INTENCITY_TOP 270
-#define LED_GLEAM_PAUSE_MS      1440
+#define LED_INTENCITY_TOP           1998
+#define LED_GLEAM_INTENCITY_TOP     270
+#define LED_GLEAM_PAUSE_MS          1440
 
-#define LED_TIM                   TIM3
-#define POWER_LED_RED_CCR         LED_TIM->CCR4
-#define POWER_LED_GREEN_CCR       LED_TIM->CCR3
-#define POWER_LED_BLUE_CCR        LED_TIM->CCR2
-#define LED_TIM_RCC_EN()          rccEnableTIM3(FALSE)
+#define LED_TIM                     TIM3
+#define POWER_LED_GREEN_CCR         LED_TIM->CCR3
+#define POWER_LED_BLUE_CCR          LED_TIM->CCR4
+#define LED_TIM_RCC_EN()            rccEnableTIM3(FALSE)
 
-enum LedColor_t {lcRed, lcBlue, lcGreen};
+enum LedColor_t {lcBlue, lcGreen};
 enum LedSmoothState_t {lssIdle, lssFadeIn, lssFadeOut, lssGleamUp, lssGleamDown, lssGleamPause};
 
 class PowerLed_t {
@@ -31,7 +30,7 @@ private:
     LedSmoothState_t Lss;
     uint32_t CurrentIntencity, DesiredIntencity;
     volatile uint32_t *PCCR;    // Current color
-    void Color2PCCR(LedColor_t AColor) { PCCR = (AColor == lcRed)? &POWER_LED_RED_CCR : ((AColor == lcBlue)? &POWER_LED_BLUE_CCR : &POWER_LED_GREEN_CCR); }
+    void Color2PCCR(LedColor_t AColor) { PCCR = ((AColor == lcBlue)? &POWER_LED_BLUE_CCR : &POWER_LED_GREEN_CCR); }
     uint32_t IValue2Delay(uint16_t AValue) { return (uint32_t)((450 / (AValue+4)) + 1); }
 public:
     void Init();

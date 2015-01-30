@@ -13,11 +13,15 @@
 #include "kl_lib_L15x.h"
 #include "cc1101.h"
 
+
+
 class rLevel1_t {
 private:
+    bool _IsInit;
     rPkt_t PktRx;
     uint32_t LastTime;
 public:
+    bool IsInit() { return _IsInit; }
     void Init();
     // Inner use
     Thread *rThd;

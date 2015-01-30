@@ -30,6 +30,10 @@ void TmrUartRxCallback(void *p) {
 
 int main(void) {
     // ==== Init Vcore & clock system ====
+#ifdef CLIENT
+    SetupVCore(vcore1V2);
+#else
+#ifdef HOST
     SetupVCore(vcore1V8);
     Clk.SetupFlashLatency(24);
     uint8_t ClkResult = 1;
@@ -40,6 +44,8 @@ int main(void) {
         Clk.DisableHSI();
         Clk.DisableMSI();
     }
+#endif
+#endif
     Clk.UpdateFreqValues();
 
     // ==== Init OS ====
@@ -47,7 +53,10 @@ int main(void) {
     chSysInit();
 
     Init();
+#ifdef HOST
     if(ClkResult) Uart.Printf("Clock failure\r");
+    PinSetupOut(GPIOB, 1, omPushPull, pudNone, ps10MHz);
+#endif
 
     // Timers
     chSysLock();
@@ -59,10 +68,43 @@ int main(void) {
         uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
         // ==== Uart cmd ====
         if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
-
+#ifdef HOST
         if(EvtMsk & EVTMSK_NEW_CMD) {
-            Uart.Printf("\r\nNewCommand recieved: %A", App.HostCommand.PBufCmd, App.HostCommand.CmdLength, ' ');
+            Uart.Printf("\r\nNewCmd: %A", App.HostCommand.PBufCmd, App.HostCommand.CmdLength, ' ');
+            switch (App.HostCommand.PBufCmd[INS_OFFSET]) {
+                case 0x01:
+                    if(Radio.IsInit()) {
+                        Uart.Printf("\r\nON");
+                       // Send pkt to On Led
+                        PinSet(GPIOB, 1);
+                        UsbSerial.CmdRpl(OK);
+                    }
+                    else UsbSerial.CmdRpl(FAILURE);
+                    break;
+
+                case 0x02:
+                    if(Radio.IsInit()) {
+                        Uart.Printf("\r\nOFF");
+                        // Send pkt to Off Led
+                        PinClear(GPIOB, 1);
+                        UsbSerial.CmdRpl(OK);
+                    }
+                    else UsbSerial.CmdRpl(FAILURE);
+                    break;
+
+                default:
+                    Uart.Printf("\r\nUnknown");
+                    UsbSerial.CmdRpl(CMD_UNKNOWN);
+                    break;
+            }
         }
+
+        if(EvtMsk & EVTMSK_RADIO_INIT) {
+            Uart.Printf("\r\nRadioInit");
+            Radio.Init();
+            UsbSerial.CmdRpl(OK);
+        }
+#endif
     } // while true
 
 }
@@ -71,15 +113,21 @@ void Init() {
     // ==== Init Hard & Soft ====
     Uart.Init(115200);
 //    Led.Init();
+//    PowerLed.Init();
+//    PowerLed.On();
 
     App.Init();
     App.PThd = chThdSelf();
-//    Radio.Init();
+#ifdef CLIENT
+    Radio.Init();
+#endif
 
-    Uart.Printf("\r\nTindenet \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
-
+    Uart.Printf("\r\nTindenet Client \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+#ifdef HOST
     Usb.Init();
     Usb.Connect();
     UsbSerial.Init();
+#endif
+
 }
 

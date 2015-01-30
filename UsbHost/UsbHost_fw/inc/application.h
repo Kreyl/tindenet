@@ -14,6 +14,12 @@
 // Addresses
 #define EE_DEVICE_ID_ADDR       0
 
+#define INS_OFFSET              0
+#define DATA_OFFSET             1
+
+
+//#define HOST
+#define CLIENT
 
 // Host Command Class
 #define MAX_HOST_CMD_SIZE   32

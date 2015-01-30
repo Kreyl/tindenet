@@ -16,7 +16,6 @@ void PowerLed_t::Init() {
     // GPIO
     PinSetupAlterFunc(GPIOB, 0, omPushPull, pudNone, AF2);
     PinSetupAlterFunc(GPIOB, 1, omPushPull, pudNone, AF2);
-    PinSetupAlterFunc(GPIOB, 5, omPushPull, pudNone, AF2);
     // Timer
     LED_TIM_RCC_EN();
     LED_TIM->CR1 = TIM_CR1_CEN; // Enable timer, set clk division to 0, AutoReload not buffered
@@ -24,9 +23,8 @@ void PowerLed_t::Init() {
     LED_TIM->PSC = 0;
     LED_TIM->ARR = LED_INTENCITY_TOP;
     // Channels
-    LED_TIM->CCMR1 = (0b110 << 12);
     LED_TIM->CCMR2 = (0b110 << 4) | (0b110 << 12);
-    LED_TIM->CCER  = TIM_CCER_CC2E | TIM_CCER_CC3E | TIM_CCER_CC4E;
+    LED_TIM->CCER  = TIM_CCER_CC3E | TIM_CCER_CC4E;
     // Initial values
     PCCR = &POWER_LED_GREEN_CCR;
 }

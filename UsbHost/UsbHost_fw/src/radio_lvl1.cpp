@@ -32,15 +32,23 @@ static void rLvl1Thread(void *arg) {
     while(true) Radio.ITask();
 }
 
-//#define TX
-//#define LED_RX
 __attribute__ ((__noreturn__))
 void rLevel1_t::ITask() {
 	// Radio Task
-	while(true) {
-		chThdSleepMilliseconds(999);
+#ifdef CLIENT
+    while(true) {
+	    int8_t RSSI;
+	    uint8_t RxRslt = CC.ReceiveSync(999, &PktRx, &RSSI);
+        if(RxRslt == OK) { // Pkt received correctly
+            Uart.Printf("Rx: %u %u %d", PktRx.ID, PktRx.State, RSSI);
+        }
 	}
-}
+#else
+#ifdef HOST
+//
+#endif
+#endif
+} // ITask
 
 #if 1 // ============================
 void rLevel1_t::Init() {
@@ -51,9 +59,10 @@ void rLevel1_t::Init() {
     // Init radioIC
     CC.Init();
     CC.SetTxPower(CC_PwrMinus15dBm);
-    CC.SetChannel(1);
-//    CC.SetPktSize(MESH_PKT_SZ);
+    CC.SetChannel(0);
+    CC.SetPktSize(RPKT_LEN);
     // Thread
     rThd = chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
+    _IsInit = true;
 }
 #endif

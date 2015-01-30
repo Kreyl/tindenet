@@ -93,15 +93,21 @@ void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
                   App.HostCommand.PutValue((uint8_t*)&Value);
             } // parse command
             if(rVal == OK) { // send event to AppThd
-                Uart.Printf("\r\nCmd OK");
                 chSysLockFromIsr();
                 chEvtSignalI(App.PThd, EVTMSK_NEW_CMD);
                 chSysUnlockFromIsr();
             }
-            CmdRpl(rVal);
+            else CmdRpl(rVal);
         } // correct Length
         else CmdRpl(CMD_ERROR);
     } // USB_SERIAL_CMD
+
+    else if (PCmd->NameIs(USB_SERIAL_INIT_RADIO)) {
+        Uart.Printf("\r\nCmd OK");
+        chSysLockFromIsr();
+        chEvtSignalI(App.PThd, EVTMSK_RADIO_INIT);
+        chSysUnlockFromIsr();
+    }
 
     else CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
 }
@@ -109,6 +115,7 @@ void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
 void UsbSerial_t::CmdRpl(uint8_t ErrCode, uint32_t Length, uint8_t *Ptr) {
     if(Length != 0) {
         // Need to
+        Printf("#Ack %X %A" END_OF_COMMAND, ErrCode, Ptr, Length, ' ');
     } else {
         if(ErrCode == 0) Printf("#Ack %X" END_OF_COMMAND, ErrCode);
         else Printf("#Err %X" END_OF_COMMAND, ErrCode);
