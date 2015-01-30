@@ -73,39 +73,24 @@ void UsbSerial_t::CompleteCmd() {
     ParseCmd(PCmdRead);
 }
 
-void UsbSerial_t::CmdRpl(uint8_t ErrCode, uint32_t Length, ...) {
-    uint32_t Buf[Length];
-    if(Length != 0) {
-        va_list Arg;
-        va_start(Arg, Length);
-        for (uint32_t i=0; i<Length; i++) Buf[i] = (uint32_t)va_arg(Arg, int);
-        va_end(Arg);
-    }
-    if(ErrCode == 0) Printf("#Ack %X %A" END_OF_COMMAND, ErrCode, Buf, Length, ' ');
-    else Printf("#Err %X" END_OF_COMMAND, ErrCode);
-}
-
 void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
 //    Uart.Printf("\r\n%S", PCmd->IString);
-    if(PCmd->NameIs(USB_SERIAL_PING)) CmdRpl(OK);
-
+    App.HostCommand.Reset();
+    if(PCmd->NameIs(USB_SERIAL_PING)) {
+        CmdRpl(OK);
+    }
     else if(PCmd->NameIs(USB_SERIAL_CMD)) {
         uint32_t CmdLength = 0;
+        uint32_t Value = 0;
         uint8_t  rVal = FAILURE;
         rVal = PCmd->TryConvertTokenToNumber(&CmdLength);
         if (rVal == OK) {
-            Uart.Printf("\r\nCmdLength: %u", CmdLength); // Here we have cmd ID
-            // cmd event eith ID and data and others and etc.
-            // fabrique of command to get the command buffer from command string
             for(uint8_t i=0; i < CmdLength; i++) {
-                rVal = PCmd->GetNextToken();
-                if(rVal != OK) break; // error cmd parameters
-                // here the correct value need to be concvert ot number
-                uint32_t Value = 0;
-                rVal = PCmd->TryConvertTokenToNumber(&Value);
-                if(rVal != OK) break;
-                Uart.Printf("\r\n%u: %u", i, Value);
-                App.HostCommand.PutValue((uint8_t*)&Value);
+                  rVal = PCmd->GetNextToken();
+                  if(rVal != OK) break;
+                  rVal = PCmd->TryConvertTokenToNumber(&Value);
+                  if(rVal != OK) break;
+                  App.HostCommand.PutValue((uint8_t*)&Value);
             } // parse command
             if(rVal == OK) { // send event to AppThd
                 Uart.Printf("\r\nCmd OK");
@@ -113,11 +98,21 @@ void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
                 chEvtSignalI(App.PThd, EVTMSK_NEW_CMD);
                 chSysUnlockFromIsr();
             }
+            CmdRpl(rVal);
         } // correct Length
-        CmdRpl(OK);
-    }
+        else CmdRpl(CMD_ERROR);
+    } // USB_SERIAL_CMD
 
-    else if(*PCmd->Name != '#') CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
+    else CmdRpl(CMD_UNKNOWN);  // reply only #-started stuff
+}
+
+void UsbSerial_t::CmdRpl(uint8_t ErrCode, uint32_t Length, uint8_t *Ptr) {
+    if(Length != 0) {
+        // Need to
+    } else {
+        if(ErrCode == 0) Printf("#Ack %X" END_OF_COMMAND, ErrCode);
+        else Printf("#Err %X" END_OF_COMMAND, ErrCode);
+    }
 }
 
 #endif
@@ -174,6 +169,7 @@ EpState_t NonStandardControlRequestHandler(uint8_t **PPtr, uint32_t *PLen) {
 
 void UsbSerial_t::Init() {
     // Usb events
+    chSemInit(&ISemaphore, 1);
     Usb.Events.OnCtrlPkt = NonStandardControlRequestHandler;
     Usb.Events.OnReady = OnUsbReady;
     // Queues
@@ -186,11 +182,14 @@ void UsbSerial_t::Init() {
 }
 
 void UsbSerial_t::Printf(const char *format, ...) {
+    chSemWait(&ISemaphore);
     va_list args;
     va_start(args, format);
     kl_print2Queue(&UsbInQueue, format, args);
     va_end(args);
     // Start transmission
     Usb.PEpBulkIn->WriteFromQueue(&UsbInQueue);
+    // release semaphore
+    chSemSignal(&ISemaphore);
 }
 

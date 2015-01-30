@@ -32,8 +32,8 @@ Usb_t Usb;
 // ========================== Implementation ===================================
 void Usb_t::Init() {
     // Init Eps' indxs
-    PEpBulkOut = &Ep[2];    // Out endpoint
-    PEpBulkIn  = &Ep[3];    // In endpoint
+    PEpBulkOut      = &Ep[2];    // Out endpoint
+    PEpBulkIn       = &Ep[3];    // In endpoint
     for(uint8_t i=0; i<EP_CNT; i++) Ep[i].Indx = i;
     // Proceed with init
     Disconnect();
@@ -56,8 +56,8 @@ void Usb_t::IReset() {
     STM32_USB->ISTR = 0;                // Clear interrupts
     STM32_USB->DADDR = DADDR_EF;        // Enable USB device with zero Addr
     STM32_USB->CNTR =  CNTR_RESETM |    // Reset IRQ
-                       CNTR_SUSPM  |    // Suspend IRQ
-                       CNTR_WKUPM  |    // Wakeup IRQ
+//                       CNTR_SUSPM  |    // Suspend IRQ
+//                       CNTR_WKUPM  |    // Wakeup IRQ
                        CNTR_CTRM;       // CorrectTransfer IRQ
     for(uint8_t i=0; i<EP_CNT; i++) Ep[i].Init(&EpCfg[i]);
     Ep[0].State = esSetup;
@@ -195,7 +195,6 @@ void Ep_t::WriteFromQueue(OutputQueue *PQ) {
     chSysLock();
     uint32_t n = chOQGetFullI(PQ);
     chSysUnlock();
-//    Uart.Printf("n=%u\r", n);
     if(n > EpCfg[Indx].InMaxsize) {
         n = EpCfg[Indx].InMaxsize;
         PInQueue = PQ;  // Remember q
@@ -340,18 +339,18 @@ EpState_t Usb_t::DefaultReqHandler(uint8_t **PPtr, uint32_t *PLen) {
             default: break;
         } // switch
     }
-    else if(Recipient == USB_REQTYPE_RECIPIENT_INTERFACE) {
-        if(SetupReq.bRequest == USB_REQ_SET_INTERFACE) {
-            if(SetupReq.wIndex > 1 or SetupReq.wValue != 0) return esError;
-            return esOutStatus;
-        }
-        else if(SetupReq.bRequest == USB_REQ_GET_INTERFACE) {
-            if(SetupReq.wIndex > 1) return esError;
-            *PPtr = (uint8_t*)cZero;
-            *PLen = 1;
-            return esInData;
-        }
-    }
+//    else if(Recipient == USB_REQTYPE_RECIPIENT_INTERFACE) {
+//        if(SetupReq.bRequest == USB_REQ_SET_INTERFACE) {
+//            if(SetupReq.wIndex > 1 or SetupReq.wValue != 0) return esError;
+//            return esOutStatus;
+//        }
+//        else if(SetupReq.bRequest == USB_REQ_GET_INTERFACE) {
+//            if(SetupReq.wIndex > 1) return esError;
+//            *PPtr = (uint8_t*)cZero;
+//            *PLen = 1;
+//            return esInData;
+//        }
+//    }
     else if(Recipient == USB_REQTYPE_RECIPIENT_ENDPOINT) {
 //        EP0_PRINT("Ep\r");
         switch(SetupReq.bRequest) {
@@ -409,12 +408,12 @@ void Usb_t::IIrqHandler() {
     }
     if(istr & ISTR_SUSP) {
 //        Uart.Printf("Sup\r");
-        ISuspend();
+//        ISuspend();
         STM32_USB->ISTR = ~ISTR_SUSP;
     }
     if(istr & ISTR_WKUP) {
 //        Uart.Printf("Wup\r");
-        IWakeup();
+//        IWakeup();
         STM32_USB->ISTR = ~ISTR_WKUP;
     }
     while(istr & ISTR_CTR) {

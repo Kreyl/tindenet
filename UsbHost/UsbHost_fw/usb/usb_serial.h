@@ -25,6 +25,7 @@ private:
     InputQueue UsbOutQueue; // From chibios' point of view, OUT data is input
     OutputQueue UsbInQueue; // From chibios' point of view, IN data is output
 public:
+    Semaphore ISemaphore;
     Thread *PThread;
     uint8_t BytesToRead;
     void Init();
@@ -41,12 +42,13 @@ public:
         else return FAILURE;
     }
     void Printf(const char *format, ...);
+
     // Inner use
     void IOutTask();
     Cmd_t ICmd[2], *PCmdWrite = &ICmd[0], *PCmdRead = &ICmd[1];
     void CompleteCmd();
     void ParseCmd(Cmd_t *PCmd);
-    void CmdRpl(uint8_t ErrCode, uint32_t Length = 0, ...);
+    void CmdRpl(uint8_t ErrCode, uint32_t Length = 0, uint8_t *Ptr = nullptr);
 };
 
 extern UsbSerial_t UsbSerial;

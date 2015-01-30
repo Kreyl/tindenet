@@ -15,6 +15,7 @@
 #include "kl_lib_L15x.h"
 #include <cstring>
 
+
 // Set to true if RX needed
 #define UART_RX_ENABLED     TRUE
 
@@ -70,6 +71,7 @@ public:
     uint8_t GetNextToken() {
         Token = strtok(NULL, DELIMITERS);
         return (*Token == '\0')? FAILURE : OK;
+
     }
     uint8_t TryConvertTokenToNumber(uint32_t *POutput) { return Convert::TryStrToUInt32(Token, POutput); }
     uint8_t TryConvertTokenToNumber( int32_t *POutput) { return Convert::TryStrToInt32(Token, POutput); }
