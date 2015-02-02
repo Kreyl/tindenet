@@ -10,7 +10,7 @@
 #include "application.h"
 #include "cc1101.h"
 #include "cmd_uart.h"
-
+#include "led_rgb.h"
 #include "peripheral.h"
 #include "sequences.h"
 
@@ -40,12 +40,22 @@ void rLevel1_t::ITask() {
 	    int8_t RSSI;
 	    uint8_t RxRslt = CC.ReceiveSync(999, &PktRx, &RSSI);
         if(RxRslt == OK) { // Pkt received correctly
-            Uart.Printf("Rx: %u %u %d", PktRx.ID, PktRx.State, RSSI);
+            Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.State, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
+            switch (PktRx.State) {
+				case 0x01:
+					Uart.Printf("\r\n LedSet");
+					Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
+					break;
+				default:
+					break;
+			}
         }
 	}
 #else
 #ifdef HOST
-//
+    while(true) {
+    	chThdSleepMilliseconds(999);
+    }
 #endif
 #endif
 } // ITask

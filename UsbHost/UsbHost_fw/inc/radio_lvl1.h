@@ -21,6 +21,7 @@ private:
     rPkt_t PktRx;
     uint32_t LastTime;
 public:
+    rPkt_t PktTx;
     bool IsInit() { return _IsInit; }
     void Init();
     // Inner use

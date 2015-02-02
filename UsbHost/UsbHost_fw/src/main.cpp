@@ -16,8 +16,7 @@
 #include "evt_mask.h"
 #include "usb_serial.h"
 #include "usb_l.h"
-
-
+#include "led_rgb.h"
 
 inline void Init();
 
@@ -74,22 +73,21 @@ int main(void) {
             switch (App.HostCommand.PBufCmd[INS_OFFSET]) {
                 case 0x01:
                     if(Radio.IsInit()) {
-                        Uart.Printf("\r\nON");
-                       // Send pkt to On Led
-                        PinSet(GPIOB, 1);
+                        PinToggle(GPIOB, 1);
+                        Radio.PktTx.ID = 0x01;
+                        Radio.PktTx.State = 0x01;
+                        Radio.PktTx.Red   = App.HostCommand.PBufCmd[DATA_OFFSET];
+                        Radio.PktTx.Green = App.HostCommand.PBufCmd[DATA_OFFSET+1];
+                        Radio.PktTx.Blue  = App.HostCommand.PBufCmd[DATA_OFFSET+2];
+                        CC.TransmitSync(&Radio.PktTx);
                         UsbSerial.CmdRpl(OK);
                     }
                     else UsbSerial.CmdRpl(FAILURE);
                     break;
 
                 case 0x02:
-                    if(Radio.IsInit()) {
-                        Uart.Printf("\r\nOFF");
-                        // Send pkt to Off Led
-                        PinClear(GPIOB, 1);
-                        UsbSerial.CmdRpl(OK);
-                    }
-                    else UsbSerial.CmdRpl(FAILURE);
+					Uart.Printf("\r\nCmd2");
+					UsbSerial.CmdRpl(OK);
                     break;
 
                 default:
@@ -112,7 +110,7 @@ int main(void) {
 void Init() {
     // ==== Init Hard & Soft ====
     Uart.Init(115200);
-//    Led.Init();
+    Led.Init();
 //    PowerLed.Init();
 //    PowerLed.On();
 
