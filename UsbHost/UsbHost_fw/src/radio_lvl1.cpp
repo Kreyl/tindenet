@@ -25,6 +25,12 @@
 
 rLevel1_t Radio;
 
+void WaitRplCallback(void *p) {
+    chSysLockFromIsr();
+    chEvtSignalI(Radio.rThd, EVTMSK_UART_RX_POLL);
+    chSysUnlockFromIsr();
+}
+
 static WORKING_AREA(warLvl1Thread, 256);
 __attribute__ ((__noreturn__))
 static void rLvl1Thread(void *arg) {
@@ -45,6 +51,7 @@ void rLevel1_t::ITask() {
 				case 0x01:
 					Uart.Printf("\r\n LedSet");
 					Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
+					chEvtSignalI(App.PThd, EVTMSK_RADIO_ACK);
 					break;
 				default:
 					break;
@@ -54,11 +61,29 @@ void rLevel1_t::ITask() {
 #else
 #ifdef HOST
     while(true) {
-    	chThdSleepMilliseconds(999);
-    }
+        CheckState();
+        switch (_State) {
+            case rsWaitAckOrRpl:
+                break;
+
+            case rsIdle:
+            case rsOff:
+                chThdSleepMilliseconds(999);
+                break;
+        } // switch
+    } // while
 #endif
 #endif
 } // ITask
+
+uint8_t rLevel1_t::WaitRpl() {
+    int8_t RSSI;
+    uint8_t RxRslt = CC.ReceiveSync(RADIO_WAIT_ACK_MS, &PktRx, &RSSI);
+    Uart.Printf("\r\nRpl %u", RxRslt);
+    if(RxRslt == OK) { // Pkt received correctly
+    }
+    return RxRslt;
+}
 
 #if 1 // ============================
 void rLevel1_t::Init() {
@@ -73,6 +98,6 @@ void rLevel1_t::Init() {
     CC.SetPktSize(RPKT_LEN);
     // Thread
     rThd = chThdCreateStatic(warLvl1Thread, sizeof(warLvl1Thread), HIGHPRIO, (tfunc_t)rLvl1Thread, NULL);
-    _IsInit = true;
+    _State = rsIdle;
 }
 #endif

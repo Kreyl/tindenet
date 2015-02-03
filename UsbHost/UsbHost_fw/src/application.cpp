@@ -12,10 +12,9 @@
 #include "evt_mask.h"
 #include "eestore.h"
 #include "radio_lvl1.h"
-
 #include <cstdlib>
-
 #include "led_rgb.h"
+
 App_t App;
 extern void TmrMeasurementCallback(void *p) __attribute__((unused));
 
@@ -28,6 +27,55 @@ void App_t::OnUartCmd(Cmd_t *PCmd) {
     else if(*PCmd->Name == '#') Uart.Ack(CMD_UNKNOWN);  // reply only #-started stuff
 }
 #endif
+
+
+void App_t::Task() {
+    uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
+    if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
+#ifdef CLIENT
+    if(EvtMsk & EVTMSK_RADIO_ACK) {
+        Radio.PktTx = RadioAck;
+        CC.TransmitSync(&Radio.PktTx); // Send Ack
+    }
+#endif
+#ifdef HOST
+    if(EvtMsk & EVTMSK_NEW_CMD) {
+        Uart.Printf("\r\nNewCmd: %A", HostCommand.PBufCmd, HostCommand.CmdLength, ' ');
+        switch (HostCommand.PBufCmd[INS_OFFSET]) {
+            case 0x01:
+                if(Radio.IsInit()) {
+                    PinToggle(GPIOB, 1);
+                    Radio.PktTx.ID = 0x01;
+                    Radio.PktTx.State = 0x01;
+                    Radio.PktTx.Red   = HostCommand.PBufCmd[DATA_OFFSET];
+                    Radio.PktTx.Green = HostCommand.PBufCmd[DATA_OFFSET+1];
+                    Radio.PktTx.Blue  = HostCommand.PBufCmd[DATA_OFFSET+2];
+                    CC.TransmitSync(&Radio.PktTx);
+                    uint8_t Rslt = Radio.WaitRpl();
+                    UsbSerial.CmdRpl(Rslt);
+                }
+                else UsbSerial.CmdRpl(FAILURE);
+                break;
+
+            case 0x02:
+                Uart.Printf("\r\nCmd2");
+                UsbSerial.CmdRpl(OK);
+                break;
+
+            default:
+                Uart.Printf("\r\nUnknown");
+                UsbSerial.CmdRpl(CMD_UNKNOWN);
+                break;
+        }
+    }
+
+    if(EvtMsk & EVTMSK_RADIO_INIT) {
+        Uart.Printf("\r\nRadioInit");
+        if(!Radio.IsInit()) Radio.Init();
+        UsbSerial.CmdRpl(OK);
+    }
+#endif
+}
 
 
 #if 1 // ========================= Application =================================

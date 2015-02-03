@@ -18,5 +18,6 @@
 /* Radio */
 #define EVTMSK_NEW_CMD          EVENT_MASK(7)
 #define EVTMSK_RADIO_INIT       EVENT_MASK(8)
+#define EVTMSK_RADIO_ACK        EVENT_MASK(9)
 
 #endif /* EVT_MASK_H_ */

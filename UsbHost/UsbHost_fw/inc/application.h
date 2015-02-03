@@ -11,6 +11,8 @@
 #include "kl_lib_L15x.h"
 #include "sequences.h"
 #include "cmd_uart.h"
+#include "usb_serial.h"
+
 // Addresses
 #define EE_DEVICE_ID_ADDR       0
 
@@ -52,8 +54,9 @@ public:
     HostCommand_t HostCommand;
     // Timers
     VirtualTimer TmrUartRx;
-    // Radio & damage
+    // Radio & UsbSerial
     void Init();
+    void Task();
     // Events
     void OnUartCmd(Cmd_t *PCmd);
 };

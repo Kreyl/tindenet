@@ -64,45 +64,7 @@ int main(void) {
 
     // Event-generating framework
     while(true) {
-        uint32_t EvtMsk = chEvtWaitAny(ALL_EVENTS);
-        // ==== Uart cmd ====
-        if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
-#ifdef HOST
-        if(EvtMsk & EVTMSK_NEW_CMD) {
-            Uart.Printf("\r\nNewCmd: %A", App.HostCommand.PBufCmd, App.HostCommand.CmdLength, ' ');
-            switch (App.HostCommand.PBufCmd[INS_OFFSET]) {
-                case 0x01:
-                    if(Radio.IsInit()) {
-                        PinToggle(GPIOB, 1);
-                        Radio.PktTx.ID = 0x01;
-                        Radio.PktTx.State = 0x01;
-                        Radio.PktTx.Red   = App.HostCommand.PBufCmd[DATA_OFFSET];
-                        Radio.PktTx.Green = App.HostCommand.PBufCmd[DATA_OFFSET+1];
-                        Radio.PktTx.Blue  = App.HostCommand.PBufCmd[DATA_OFFSET+2];
-                        CC.TransmitSync(&Radio.PktTx);
-                        UsbSerial.CmdRpl(OK);
-                    }
-                    else UsbSerial.CmdRpl(FAILURE);
-                    break;
-
-                case 0x02:
-					Uart.Printf("\r\nCmd2");
-					UsbSerial.CmdRpl(OK);
-                    break;
-
-                default:
-                    Uart.Printf("\r\nUnknown");
-                    UsbSerial.CmdRpl(CMD_UNKNOWN);
-                    break;
-            }
-        }
-
-        if(EvtMsk & EVTMSK_RADIO_INIT) {
-            Uart.Printf("\r\nRadioInit");
-            Radio.Init();
-            UsbSerial.CmdRpl(OK);
-        }
-#endif
+        App.Task();
     } // while true
 
 }
@@ -118,10 +80,12 @@ void Init() {
     App.PThd = chThdSelf();
 #ifdef CLIENT
     Radio.Init();
+    Uart.Printf("\r\nTindenet Client \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
 #endif
 
-    Uart.Printf("\r\nTindenet Client \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+
 #ifdef HOST
+    Uart.Printf("\r\nTindenet Host \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
     Usb.Init();
     Usb.Connect();
     UsbSerial.Init();
