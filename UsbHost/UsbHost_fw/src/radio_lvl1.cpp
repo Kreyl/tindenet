@@ -48,7 +48,7 @@ void rLevel1_t::ITask() {
         uint8_t RxRslt;
         switch (_State) {
             case rsIdle:
-                RxRslt = CC.ReceiveSync(999, &PktRx, &RSSI);
+                RxRslt = CC.ReceiveSync(99, &PktRx, &RSSI);
                 if(RxRslt == OK) { // Pkt received correctly
                     Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.State, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
                     switch (PktRx.State) {

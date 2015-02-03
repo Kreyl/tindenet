@@ -35,8 +35,8 @@ void App_t::Task() {
 #ifdef CLIENT
     if(EvtMsk & EVTMSK_RADIO_ACK) {
         Uart.Printf("\r\nSendAck");
-        Radio.PktTx.ID = 0;//RadioAck;
-        chThdSleepMilliseconds(99);
+        Radio.PktTx = RadioAck;
+        chThdSleepMilliseconds(41);
         CC.TransmitSync(&Radio.PktTx); // Send Ack
         Radio.SetState(rsIdle);
         Uart.Printf("\r\nrsIdle");

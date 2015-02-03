@@ -14,7 +14,7 @@
 #include "cc1101.h"
 
 
-#define RADIO_WAIT_ACK_MS   999
+#define RADIO_WAIT_ACK_MS   99
 
 #define RadioAck  ((rPkt_t){0x42, 0x63, 0x6B, 0x4F, 0x4B})
 
