@@ -43,20 +43,33 @@ void rLevel1_t::ITask() {
 	// Radio Task
 #ifdef CLIENT
     while(true) {
-	    int8_t RSSI;
-	    uint8_t RxRslt = CC.ReceiveSync(999, &PktRx, &RSSI);
-        if(RxRslt == OK) { // Pkt received correctly
-            Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.State, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
-            switch (PktRx.State) {
-				case 0x01:
-					Uart.Printf("\r\n LedSet");
-					Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
-					chEvtSignalI(App.PThd, EVTMSK_RADIO_ACK);
-					break;
-				default:
-					break;
-			}
-        }
+        CheckState();
+        int8_t RSSI;
+        uint8_t RxRslt;
+        switch (_State) {
+            case rsIdle:
+                RxRslt = CC.ReceiveSync(999, &PktRx, &RSSI);
+                if(RxRslt == OK) { // Pkt received correctly
+                    Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.State, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
+                    switch (PktRx.State) {
+                        case 0x01:
+                            Uart.Printf("\r\nLedSet");
+                            Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
+                            SetState(rsWaitAckOrRpl);
+                            chEvtSignalI(App.PThd, EVTMSK_RADIO_ACK);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+
+            case rsOff:
+            case rsWaitAckOrRpl:
+                chThdSleepMilliseconds(9);
+                break;
+        } // switch
+
 	}
 #else
 #ifdef HOST

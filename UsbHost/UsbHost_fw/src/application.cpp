@@ -34,8 +34,12 @@ void App_t::Task() {
     if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
 #ifdef CLIENT
     if(EvtMsk & EVTMSK_RADIO_ACK) {
-        Radio.PktTx = RadioAck;
+        Uart.Printf("\r\nSendAck");
+        Radio.PktTx.ID = 0;//RadioAck;
+        chThdSleepMilliseconds(99);
         CC.TransmitSync(&Radio.PktTx); // Send Ack
+        Radio.SetState(rsIdle);
+        Uart.Printf("\r\nrsIdle");
     }
 #endif
 #ifdef HOST

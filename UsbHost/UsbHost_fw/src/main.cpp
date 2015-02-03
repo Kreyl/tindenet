@@ -81,6 +81,8 @@ void Init() {
 #ifdef CLIENT
     Radio.Init();
     Uart.Printf("\r\nTindenet Client \r\nAHB=%u Mhz; APB1=%u Mhz; APB2=%u Mhz", Clk.AHBFreqHz/1000000, Clk.APB1FreqHz/1000000, Clk.APB2FreqHz/1000000);
+    Led.SetColor(clWhite);
+    Led.SetColor(clBlack);
 #endif
 
 
