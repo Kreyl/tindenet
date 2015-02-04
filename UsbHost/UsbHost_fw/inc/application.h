@@ -27,12 +27,19 @@
 #define MAX_HOST_CMD_SIZE   32
 class HostCommand_t {
 private:
-    uint8_t CmdBuffer[MAX_HOST_CMD_SIZE];
+    union {
+        struct {
+            uint8_t RecipientID;
+            uint8_t CmdType;
+            uint8_t Data[MAX_HOST_CMD_SIZE - 2];
+        };
+        uint8_t CmdBuffer[MAX_HOST_CMD_SIZE];
+    };
     uint8_t *PToWrite;
 public:
-    uint8_t *PBufCmd;
+    uint8_t *PCmd;
     uint8_t CmdLength;
-    void Init()     { PBufCmd = CmdBuffer;  Reset(); }
+    void Init()     { PCmd = CmdBuffer;  Reset(); }
     void Reset()    { CmdLength = 0; PToWrite = CmdBuffer; }
     uint8_t PutValue(uint8_t *PVal) {
         if(PToWrite >= (CmdBuffer + MAX_HOST_CMD_SIZE)) return FAILURE;
@@ -51,7 +58,7 @@ private:
 public:
     uint32_t SelfID;
     Thread *PThd;
-    HostCommand_t HostCommand;
+    HostCommand_t hCommand;
     // Timers
     VirtualTimer TmrUartRx;
     // Radio & UsbSerial

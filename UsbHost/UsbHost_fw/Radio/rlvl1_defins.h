@@ -46,7 +46,7 @@ static inline int32_t dBm2Percent(int32_t Rssi) {
 #if 1 // =========================== Pkt_t =====================================
 struct rPkt_t {
     uint8_t ID;
-    uint8_t State;
+    uint8_t CmdType;
     uint8_t Red;
     uint8_t Green;
     uint8_t Blue;

@@ -16,7 +16,7 @@
 
 #define RADIO_WAIT_ACK_MS   99
 
-#define RadioAck  ((rPkt_t){0x42, 0x63, 0x6B, 0x4F, 0x4B})
+#define RadioAck  ((rPkt_t){0x00, 0x00, 0x42, 0x63, 0x6B})
 
 enum RadioState_t {
     rsOff = 0, rsWaitAckOrRpl = 1, rsIdle = 2

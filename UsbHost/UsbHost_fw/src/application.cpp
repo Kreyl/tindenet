@@ -34,26 +34,27 @@ void App_t::Task() {
     if(EvtMsk & EVTMSK_UART_RX_POLL) Uart.PollRx(); // Check if new cmd received
 #ifdef CLIENT
     if(EvtMsk & EVTMSK_RADIO_ACK) {
-        Uart.Printf("\r\nSendAck");
         Radio.PktTx = RadioAck;
-        chThdSleepMilliseconds(41);
+        Radio.PktTx.ID = SelfID;
+        chThdSleepMilliseconds(41); // wait Host to go in Rx state
         CC.TransmitSync(&Radio.PktTx); // Send Ack
         Radio.SetState(rsIdle);
-        Uart.Printf("\r\nrsIdle");
     }
 #endif
+
+
 #ifdef HOST
     if(EvtMsk & EVTMSK_NEW_CMD) {
-        Uart.Printf("\r\nNewCmd: %A", HostCommand.PBufCmd, HostCommand.CmdLength, ' ');
-        switch (HostCommand.PBufCmd[INS_OFFSET]) {
+        Uart.Printf("\r\nNewCmd: %A", hCommand.PCmd, hCommand.CmdLength, ' ');
+        switch (hCommand.CmdType) {
             case 0x01:
                 if(Radio.IsInit()) {
                     PinToggle(GPIOB, 1);
-                    Radio.PktTx.ID = 0x01;
-                    Radio.PktTx.State = 0x01;
-                    Radio.PktTx.Red   = HostCommand.PBufCmd[DATA_OFFSET];
-                    Radio.PktTx.Green = HostCommand.PBufCmd[DATA_OFFSET+1];
-                    Radio.PktTx.Blue  = HostCommand.PBufCmd[DATA_OFFSET+2];
+                    Radio.PktTx.ID      = hCommand.RecipientID; // Id to send
+                    Radio.PktTx.CmdType = hCommand.CmdType;
+                    Radio.PktTx.Red     = hCommand.Data[0];
+                    Radio.PktTx.Green   = hCommand.Data[1];
+                    Radio.PktTx.Blue    = hCommand.Data[2];
                     CC.TransmitSync(&Radio.PktTx);
                     uint8_t Rslt = Radio.WaitRpl();
                     UsbSerial.CmdRpl(Rslt);
@@ -84,8 +85,15 @@ void App_t::Task() {
 
 #if 1 // ========================= Application =================================
 void App_t::Init() {
-    HostCommand.Init();
+    hCommand.Init();
+#ifdef CLIENT
     SelfID = EE.Read32(EE_DEVICE_ID_ADDR);  // Read device ID
+    Uart.Printf("\r\nApp ID: %u", SelfID);
+#else
+#ifdef HOST
+    Uart.Printf("\r\nApp Host");
+#endif
+#endif
 }
 
 uint8_t App_t::ISetID(uint32_t NewID) {

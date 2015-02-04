@@ -50,16 +50,19 @@ void rLevel1_t::ITask() {
             case rsIdle:
                 RxRslt = CC.ReceiveSync(99, &PktRx, &RSSI);
                 if(RxRslt == OK) { // Pkt received correctly
-                    Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.State, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
-                    switch (PktRx.State) {
-                        case 0x01:
-                            Uart.Printf("\r\nLedSet");
-                            Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
-                            SetState(rsWaitAckOrRpl);
-                            chEvtSignalI(App.PThd, EVTMSK_RADIO_ACK);
-                            break;
-                        default:
-                            break;
+                    Uart.Printf("\r\nRx: %u %u {%u,%u,%u} %d", PktRx.ID, PktRx.CmdType, PktRx.Red, PktRx.Green, PktRx.Blue, RSSI);
+                    if(App.SelfID == PktRx.ID) {
+                        switch (PktRx.CmdType) {
+                            case 0x01:
+                                Uart.Printf("\r\nLedSet");
+                                Led.SetColor((Color_t){PktRx.Red, PktRx.Green, PktRx.Blue});
+                                SetState(rsWaitAckOrRpl);
+                                chEvtSignalI(App.PThd, EVTMSK_RADIO_ACK);
+                                break;
+                            default:
+                                Uart.Printf("\r\nUnknown cmd:%u", PktRx.CmdType);
+                                break;
+                        }
                     }
                 }
                 break;
