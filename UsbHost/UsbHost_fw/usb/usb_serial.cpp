@@ -75,7 +75,7 @@ void UsbSerial_t::CompleteCmd() {
 
 void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
 //    Uart.Printf("\r\n%S", PCmd->IString);
-    App.HostCommand.Reset();
+    App.hCommand.Reset();
     if(PCmd->NameIs(USB_SERIAL_PING)) {
         CmdRpl(OK);
     }
@@ -90,7 +90,7 @@ void UsbSerial_t::ParseCmd(Cmd_t *PCmd) {
                   if(rVal != OK) break;
                   rVal = PCmd->TryConvertTokenToNumber(&Value);
                   if(rVal != OK) break;
-                  App.HostCommand.PutValue((uint8_t*)&Value);
+                  App.hCommand.PutValue((uint8_t*)&Value);
             } // parse command
             if(rVal == OK) { // send event to AppThd
                 chSysLockFromIsr();
