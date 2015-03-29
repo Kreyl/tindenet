@@ -1,0 +1,1 @@
+"Tindenet" runs on simple hardware (ARM Cortex-M0) and provides low level of stack.
